@@ -14,14 +14,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class ExcelToWordScraper {
+public class Uasvision {
 
     public static void main(String[] args) {
         // Configuration
         String excelPath = "input_urls.xlsx";
-        String wordOutputPath2023 = "batch_1_unmannedsystemstechnology_2023.docx";
-        String wordOutputPath2024 = "batch_1_unmannedsystemstechnology_2024.docx";
-        String wordOutputPath2025 = "batch_1_unmannedsystemstechnology_2025.docx";
+        String wordOutputPath2023 = "batch_1_uasvision_2023.docx";
+        String wordOutputPath2024 = "batch_1_uasvision_2024.docx";
+        String wordOutputPath2025 = "batch_1_uasvision_2025.docx";
 
         try {
             List<String> urls = readUrlsFromExcel(excelPath);
@@ -185,8 +185,19 @@ public class ExcelToWordScraper {
             // Extract content
             Elements paragraphs = doc.select("p");
             for (Element p : paragraphs) {
+
                 String text = p.text().trim();
                 if (!text.isEmpty()) {
+                    if(text.contains("UAS VISION")||
+                            text.contains("an independent online news") ||
+                            text.contains("Photo:") ||
+                            text.contains("Photos:")){
+                        continue;
+                    }
+                    if(text.contains("Source:")||
+                            text.contains("Sources:")){
+                        break;
+                    }
                     content.append(text).append("\n\n");
                 }
             }

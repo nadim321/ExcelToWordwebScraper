@@ -14,14 +14,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class ExcelToWordScraper {
+public class Suasnews2 {
 
     public static void main(String[] args) {
         // Configuration
         String excelPath = "input_urls.xlsx";
-        String wordOutputPath2023 = "batch_1_unmannedsystemstechnology_2023.docx";
-        String wordOutputPath2024 = "batch_1_unmannedsystemstechnology_2024.docx";
-        String wordOutputPath2025 = "batch_1_unmannedsystemstechnology_2025.docx";
+        String wordOutputPath2023 = "batch_1_suasnews_2023.docx";
+        String wordOutputPath2024 = "batch_1_suasnews_2024.docx";
+        String wordOutputPath2025 = "batch_1_suasnews_2025.docx";
 
         try {
             List<String> urls = readUrlsFromExcel(excelPath);
@@ -127,47 +127,6 @@ public class ExcelToWordScraper {
         return dates;
     }
 
-
-
-    // Scrape article content
-//    private static String scrapeArticle(String url) throws IOException {
-//        StringBuilder content = new StringBuilder();
-//        try {
-//          Document doc = Jsoup.connect(url)
-//                  .userAgent("Mozilla/5.0")
-//                  .timeout(20000)
-//                  .get();
-//
-//          Elements paragraphs = doc.select("p");
-//          boolean isStart = false;
-//          for (Element p : paragraphs) {
-////              if(p.text().contains(" Comment") && !isStart){
-////                  isStart = true;
-////                  continue;
-////              }
-////              if(!isStart){
-////                  continue;
-////              }
-//              if(p.text().contains("Home » ")) {
-//                  continue;
-//              }
-//              if(p.text().contains("Related Posts") || p.text().contains("Report an Issue")){
-//                  break;
-//              }
-//              String text = p.text().trim();
-//              if (!text.isEmpty()) {
-//                  content.append(text).append("\n\n");
-//              }
-//          }
-//
-//      }catch (Exception e){
-//          e.printStackTrace();
-//      }
-//      return content.toString();
-//    }
-
-
-
     // Scrape Article Content
     private static String scrapeArticle(String url) {
         StringBuilder content = new StringBuilder();
@@ -185,8 +144,19 @@ public class ExcelToWordScraper {
             // Extract content
             Elements paragraphs = doc.select("p");
             for (Element p : paragraphs) {
+                if (p.parent().getElementsByAttributeValue("class", "textwidget custom-html-widget").size() > 0){
+                    break;
+                }
+                if (p.parent().getElementsByAttributeValue("class", "limit-two-line desc-paragraph hidden-sm hidden-xs").size() > 0){
+                    break;
+                }
                 String text = p.text().trim();
                 if (!text.isEmpty()) {
+                    if(text.contains("Subscribe to get ") || text.contains("For more information")
+
+                    ){
+                        break;
+                    }
                     content.append(text).append("\n\n");
                 }
             }

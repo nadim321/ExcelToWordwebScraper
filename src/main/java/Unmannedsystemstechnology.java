@@ -11,10 +11,11 @@ import org.jsoup.select.Elements;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class ExcelToWordScraper {
+public class Unmannedsystemstechnology {
 
     public static void main(String[] args) {
         // Configuration
@@ -169,13 +170,19 @@ public class ExcelToWordScraper {
 
 
     // Scrape Article Content
-    private static String scrapeArticle(String url) {
+    private static String scrapeArticle(String url) throws UnsupportedEncodingException {
+        String apiKey = "6ZA67E0TGE7N9MD7SRX5OTTIPSKG7DIVDWU6CTV8CWOD090MIUIQMMC73NI7033M265V07NAWA7PN9T0";
+//        String targetUrl = "https://www.asdnews.com/news/defense/2023/10/11/gaasi-advances-aerial-recovery-suas-ale";
+
+        String newUrl = "https://app.scrapingbee.com/api/v1?api_key=" + apiKey +
+                "&url=" + java.net.URLEncoder.encode(url, "UTF-8") +
+                "&render_js=false";
         StringBuilder content = new StringBuilder();
         try {
             // Configure connection with proper timeouts and headers
-            Document doc = Jsoup.connect(url)
+            Document doc = Jsoup.connect(newUrl)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                    .timeout(20000) // 30 seconds timeout
+                    .timeout(30000) // 30 seconds timeout
                     .ignoreHttpErrors(true)
                     .followRedirects(true)
                     .maxBodySize(0) // No limit on page size
@@ -183,11 +190,45 @@ public class ExcelToWordScraper {
                     .parse();
 
             // Extract content
-            Elements paragraphs = doc.select("p");
-            for (Element p : paragraphs) {
-                String text = p.text().trim();
-                if (!text.isEmpty()) {
-                    content.append(text).append("\n\n");
+
+            Elements elements = doc.select("p, ul, ol");
+            boolean isPStart = false;
+            for (Element element : elements) {
+                // Skip elements with the excluded class
+
+                if(element.getElementsByAttributeValue("class" , "eb-typography").size() > 0){
+                    break;
+                }
+
+                String tagName = element.tagName();
+
+                if (tagName.equals("p")) {
+
+                    String text = element.text().trim();
+                    if (!text.isEmpty()) {
+                        if(text.contains("Find out more about") || text.contains("Find suppliers & manufacturers")||
+                        text.contains("suppliers and manufacturers>>") || text.contains("Find manufacturers")
+                        ){
+                            break;
+                        }
+                        isPStart = true;
+                        content.append(text).append("\n\n");
+                    }
+                }
+                else if ((tagName.equals("ul") || tagName.equals("ol") ) && isPStart ) {
+                    // Process all list items
+                    Elements listItems = element.select("> li"); // Direct children only
+                    for (Element li : listItems) {
+                        String itemText = li.text().trim();
+                        if(itemText.contains("E: [email protected]") || itemText.contains("Find a Supplier")|| itemText.contains("E:")){
+                            break;
+                        }
+                        if (!itemText.isEmpty()) {
+                            String bullet = tagName.equals("ul") ? "• " : "- ";
+                            content.append(bullet).append(itemText).append("\n\n");
+                        }
+                    }
+                    content.append("\n"); // Extra space after lists
                 }
             }
         } catch (Exception e) {
